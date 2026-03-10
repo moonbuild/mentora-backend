@@ -34,5 +34,5 @@ const fetchTasks = async () => {
   return await res.json();
 };
 
-createTask('title3', 'loream ipsum').then((res) => console.log(res));
+createTask('title4', 'loream ipsum').then((res) => console.log(res));
 fetchTasks().then((res) => console.log(res));
