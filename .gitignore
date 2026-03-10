@@ -1,3 +1,7 @@
 node_modules/
 
 .env
+src/generated/prisma
+
+// this is anyway temp, thinking to switch to postgres later
+dev.db
