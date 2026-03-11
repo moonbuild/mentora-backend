@@ -5,14 +5,14 @@ const fetchServerStatus = async () => {
   const data = await res.json();
   return data;
 };
-fetchServerStatus().then((res) => console.log(res));
 
 const fetchHealth = async () => {
   const res = await fetch(url.concat('/health'));
   const data = await res.json();
   return data;
 };
-fetchHealth().then((res) => console.log(res));
+// fetchServerStatus().then((res) => console.log(res));
+// fetchHealth().then((res) => console.log(res));
 
 const createTask = async (title: string, description: string) => {
   const res = await fetch(url.concat('/tasks'), {
@@ -34,16 +34,16 @@ const fetchTasks = async () => {
   return await res.json();
 };
 
-createTask('title4', 'loream ipsum').then((res) => console.log(res));
-fetchTasks().then((res) => console.log(res));
+// createTask('title4', 'loream ipsum').then((res) => console.log(res));
+// fetchTasks().then((res) => console.log(res));
 
 const testAuthFlow = async () => {
   try {
     const data = {
-      username: 'moonbuild5',
+      username: 'moonbuild6',
       password: 'Mourya123@',
       role: 'student',
-      first_name: 'Mourya4',
+      first_name: 'Mourya6',
       last_name: 'Pranay',
     };
     console.log("Signup running");
@@ -62,7 +62,20 @@ const testAuthFlow = async () => {
       body: JSON.stringify(data),
     });
 
-    const authData = (await loginResponse.json()) as { accessToken: string; refreshToken: string };
+    const loginData = (await loginResponse.json()) as { accessToken: string; refreshToken: string };;
+    console.log("🚀 ~ testAuthFlow ~ logindata:", loginData);
+    
+    console.log("Refresh Token running");
+    const refreshResponse = await fetch(url.concat('/auth/refresh'), {
+      method:'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+              body:JSON.stringify({
+          refreshToken:loginData.refreshToken
+        })
+    })
+    const authData = (await refreshResponse.json()) as { accessToken: string; refreshToken: string };
     console.log("🚀 ~ testAuthFlow ~ authData:", authData)
     const accessToken = authData.accessToken;
     // lets try accessing protected route
@@ -71,6 +84,7 @@ const testAuthFlow = async () => {
       headers: {
         Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
+
       },
     });
     const statusData = await protectedRes.json();

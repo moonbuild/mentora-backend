@@ -3,13 +3,13 @@ import { ACCESS_TOKEN_EXPIRE, REFRESH_TOKEN_EXPIRE } from './constants';
 import prisma from '../lib/db';
 
 export const createAccessToken = ({ userId }: { userId: string }) => {
-  return jwt.sign({ userId }, process.env['ACCESS_TOKEN_SECRET']!, {
+  return jwt.sign({ userId, jti: crypto.randomUUID() }, process.env['ACCESS_TOKEN_SECRET']!, {
     expiresIn: ACCESS_TOKEN_EXPIRE,
   });
 };
 
 export const createStoreRefreshToken = async ({ userId }: { userId: string }) => {
-  const token = jwt.sign({ userId }, process.env['REFRESH_SECRET']!, {
+  const token = jwt.sign({ userId, jti: crypto.randomUUID() }, process.env['REFRESH_SECRET']!, {
     expiresIn: REFRESH_TOKEN_EXPIRE,
   });
 

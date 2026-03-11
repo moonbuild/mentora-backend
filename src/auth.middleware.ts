@@ -21,6 +21,6 @@ export const authenticate = (req: AuthRequest, res: Response, next: NextFunction
     req.userId = decoded.userId;
     return next();
   } catch {
-    return res.status(500).json({ error: 'Invalid or expired access token' });
+    return res.status(401).json({ error: 'Invalid or expired access token' });
   }
 };

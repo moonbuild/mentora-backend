@@ -3,6 +3,8 @@ import argon2 from 'argon2';
 import { SignupReq, LoginReq } from '../routes/interface/auth.interface';
 import userService from '../service/user.service';
 import { createAccessToken, createStoreRefreshToken } from '../utils/auth.util';
+import prisma from '../lib/db';
+import jwt from 'jsonwebtoken';
 
 const authController = {
   signup: async (req: Request, res: Response) => {
@@ -61,6 +63,31 @@ const authController = {
       return res.status(500).json({ error: 'Failed to login user' });
     }
   },
+
+  refresh: async (req: Request, res: Response) => {
+    // here we check if refresh token is valid
+    const oldRefreshToken = req.body.refreshToken;
+    if (!oldRefreshToken) return res.status(401).json({ error: 'No refresh token' });
+
+    try {
+      const decoded = jwt.verify(oldRefreshToken, process.env['REFRESH_SECRET']!) as {
+        userId: string;
+      };
+      const userId = decoded.userId;
+      const dbToken = await prisma.refreshToken.findUnique({
+        where: { token: oldRefreshToken, is_revoked: false },
+      });
+      if (!dbToken) {
+        res.status(403).json({ error: 'Token is revoked' });
+      }
+      const accessToken = createAccessToken({ userId });
+      const refreshToken = await createStoreRefreshToken({ userId });
+      return res.status(201).json({ accessToken, refreshToken });
+    } catch {
+      return res.status(403).json({ error: 'Invalid refresh token' });
+    }
+  },
+
   protectedRouteTest: async (_: Request, res: Response) => {
     return res.status(201).json({ message: 'hello' });
   },

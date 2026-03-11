@@ -11,7 +11,9 @@ authRouter.post('/signup', async (req: Request, res: Response) => {
 authRouter.post('/login', async (req: Request, res: Response) => {
   return authController.login(req, res);
 });
-
+authRouter.post('/refresh', async (req: AuthRequest, res: Response) => {
+  return authController.refresh(req, res);
+});
 authRouter.get('/protected', authenticate, async (req: AuthRequest, res: Response) => {
   return authController.protectedRouteTest(req, res);
 });
