@@ -1,21 +1,20 @@
 const url = `http://localhost:3000`;
+const generalTest = async () => {
+  console.log('Testing base url');
+  const serverStatus = await fetch(url);
+  const serverResponse = await serverStatus.json();
+  console.log('base url response: ', serverResponse);
 
-const fetchServerStatus = async () => {
-  const res = await fetch(url);
-  const data = await res.json();
-  return data;
+  console.log('Testing health endpoint');
+  const healthRaw = await fetch(url.concat('/health'));
+  const healthResponse = await healthRaw.json();
+  console.log('/health response: ', healthResponse);
 };
-
-const fetchHealth = async () => {
-  const res = await fetch(url.concat('/health'));
-  const data = await res.json();
-  return data;
-};
-// fetchServerStatus().then((res) => console.log(res));
-// fetchHealth().then((res) => console.log(res));
-
-const createTask = async (title: string, description: string) => {
-  const res = await fetch(url.concat('/tasks'), {
+const tasksTest = async () => {
+  const title = 'title5';
+  const description = 'loream ipsum';
+  console.log('Creating task: ');
+  const createTaskRaw = await fetch(url.concat('/tasks'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -25,17 +24,14 @@ const createTask = async (title: string, description: string) => {
       description,
     }),
   });
-  const data = await res.json();
-  return data;
-};
+  const currentTask = await createTaskRaw.json();
+  console.log('current task row: ', currentTask);
 
-const fetchTasks = async () => {
+  console.log('Fetching All Tasks');
   const res = await fetch(url.concat('/tasks'));
-  return await res.json();
+  const tasks = await res.json();
+  console.log('All tasks: ', tasks);
 };
-
-// createTask('title4', 'loream ipsum').then((res) => console.log(res));
-// fetchTasks().then((res) => console.log(res));
 
 const testAuthFlow = async () => {
   try {
@@ -46,88 +42,65 @@ const testAuthFlow = async () => {
       first_name: 'Mourya6',
       last_name: 'Pranay',
     };
-    console.log("Signup running");
+    console.log('Signup running');
     const signupResponse = await fetch(url.concat('/auth/signup'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
     const signupData = await signupResponse.json();
-    console.log("🚀 ~ testAuthFlow ~ signupdata:", signupData);
+    console.log('🚀 ~ testAuthFlow ~ signupdata:', signupData);
 
-    console.log("Login running");
+    console.log('Login running');
     const loginResponse = await fetch(url.concat('/auth/login'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
 
-    const loginData = (await loginResponse.json()) as { accessToken: string; refreshToken: string };;
-    console.log("🚀 ~ testAuthFlow ~ logindata:", loginData);
-    
-    console.log("Refresh Token running");
+    const loginData = (await loginResponse.json()) as { accessToken: string; refreshToken: string };
+    console.log('🚀 ~ testAuthFlow ~ logindata:', loginData);
+
+    console.log('Refresh Token running');
     const refreshResponse = await fetch(url.concat('/auth/refresh'), {
-      method:'POST',
+      method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
-              body:JSON.stringify({
-          refreshToken:loginData.refreshToken
-        })
-    })
-    const authData = (await refreshResponse.json()) as { accessToken: string; refreshToken: string };
-    console.log("🚀 ~ testAuthFlow ~ authData:", authData)
+      body: JSON.stringify({
+        refreshToken: loginData.refreshToken,
+      }),
+    });
+    const authData = (await refreshResponse.json()) as {
+      accessToken: string;
+      refreshToken: string;
+    };
+    console.log('🚀 ~ testAuthFlow ~ authData:', authData);
     const accessToken = authData.accessToken;
+
     // lets try accessing protected route
-    const protectedRes = await fetch(`${url}/auth/protected`, {
+    const userRaw1 = await fetch(`${url}/me`, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
-
       },
     });
-    const statusData = await protectedRes.json();
-    console.log(' ~  protected route with access token: ', statusData);
-       const protectedResWithoutToken = await fetch(`${url}/auth/protected`, {
+    const userResponse1 = await userRaw1.json();
+
+    console.log(' ~  protected route with access token: ', userResponse1);
+    const userRaw2 = await fetch(`${url}/me`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
       },
     });
-    const withoutAccessTokenData = await protectedResWithoutToken.json();
-    console.log(' ~  protected route with access token: ', withoutAccessTokenData);
+    const userResponse2 = await userRaw2.json();
+    console.log(' ~  protected route without! access token: ', userResponse2);
   } catch (error) {
     console.error(error);
   }
 };
-
+generalTest();
+tasksTest();
 testAuthFlow();
-// const signup = async ()=>{
-//     // this is post operation
-//     const response = await fetch(url.concat("/auth/signup"), {
-//         method:'POST',
-//         headers:{
-//             'Content-Type':'application/json'
-//         },
-//         body:JSON.stringify(data)
-//     });
-//     console.log(data, JSON.stringify(data));
-//     const res = await response.json()
-//     return res;
-// }
-// const login = async ()=>{
-//     const data = {username:"moonbuild", password:"Mourya123@"};
-//     // this is post operation
-//     const response = await fetch(url.concat("/auth/login"),{
-//         method:'POST',
-//         headers:{
-//             'Content-Type':'application/json',
-//         },
-//         body:JSON.stringify(data)
-//     });
-//     const res = await response.json()
-//     return res;
-// }
-// signup().then(r=>console.log(r));
-// // login().then(r=>console.log(r));

@@ -5,15 +5,21 @@ generator client {
   provider = "prisma-client-js"
   output   = "../src/generated/prisma"
 }
-
 datasource db {
   provider = "sqlite"
 }
+
+enum UserRole {
+  parent 
+  mentor 
+  student
+}
+
 model User{
   user_id String @id @default(uuid())
   username String @unique
   hashed_password String 
-  role String
+  role UserRole
   first_name String
   last_name String
   created_at DateTime @default(now())
@@ -31,6 +37,7 @@ model RefreshToken{
   created_at DateTime  @default(now())
   updated_at DateTime  @default(now()) @updatedAt
 }
+
 model Task{
   task_id String @id @default(uuid())
   title String

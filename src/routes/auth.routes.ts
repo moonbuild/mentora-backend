@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { authenticate, AuthRequest } from '../auth.middleware';
+import { AuthRequest } from '../auth.middleware';
 import authController from '../controllers/auth.controller';
 
 const authRouter = Router();
@@ -13,9 +13,6 @@ authRouter.post('/login', async (req: Request, res: Response) => {
 });
 authRouter.post('/refresh', async (req: AuthRequest, res: Response) => {
   return authController.refresh(req, res);
-});
-authRouter.get('/protected', authenticate, async (req: AuthRequest, res: Response) => {
-  return authController.protectedRouteTest(req, res);
 });
 
 export default authRouter;

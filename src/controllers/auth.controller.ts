@@ -15,11 +15,18 @@ const authController = {
     if (!first_name) return res.status(400).json({ error: 'First name is required' });
     if (!last_name) return res.status(400).json({ error: 'Last name is required' });
 
+    // only mentor and parent can signup.
+    const validRoles = ['mentor', 'parent'];
+    if (!validRoles.includes(role))
+      return res.status(400).json({ error: `Invalid role, only ${validRoles.join(', ')}` });
+
+    // if username already taken then return
     const user = await userService.findUserByUsername({ username });
 
     if (user) {
       return res.status(409).json({ error: `Username ${username} already exists` });
     }
+
     try {
       const hashedPassword = await argon2.hash(password);
       const newUser = await userService.createUser({
@@ -86,10 +93,6 @@ const authController = {
     } catch {
       return res.status(403).json({ error: 'Invalid refresh token' });
     }
-  },
-
-  protectedRouteTest: async (_: Request, res: Response) => {
-    return res.status(201).json({ message: 'hello' });
   },
 };
 export default authController;
