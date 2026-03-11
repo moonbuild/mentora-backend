@@ -1,4 +1,6 @@
 const url = `http://localhost:3000`;
+interface RefreshToken {accessToken:string, refreshToken:string};
+
 const generalTest = async () => {
   console.log('Testing base url');
   const serverStatus = await fetch(url);
@@ -10,56 +12,34 @@ const generalTest = async () => {
   const healthResponse = await healthRaw.json();
   console.log('/health response: ', healthResponse);
 };
-const tasksTest = async () => {
-  const title = 'title5';
-  const description = 'loream ipsum';
-  console.log('Creating task: ');
-  const createTaskRaw = await fetch(url.concat('/tasks'), {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      title,
-      description,
-    }),
-  });
-  const currentTask = await createTaskRaw.json();
-  console.log('current task row: ', currentTask);
 
-  console.log('Fetching All Tasks');
-  const res = await fetch(url.concat('/tasks'));
-  const tasks = await res.json();
-  console.log('All tasks: ', tasks);
+const userPayload = {
+  username: 'moonbuild8',
+  password: 'Mourya123@',
+  role: 'parent',
+  first_name: 'Mourya8',
+  last_name: 'Pranay',
 };
-
 const testAuthFlow = async () => {
   try {
-    const data = {
-      username: 'moonbuild6',
-      password: 'Mourya123@',
-      role: 'student',
-      first_name: 'Mourya6',
-      last_name: 'Pranay',
-    };
     console.log('Signup running');
     const signupResponse = await fetch(url.concat('/auth/signup'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
+      body: JSON.stringify(userPayload),
     });
     const signupData = await signupResponse.json();
-    console.log('🚀 ~ testAuthFlow ~ signupdata:', signupData);
+    console.log(' testAuthFlow ~ signupdata:', signupData);
 
     console.log('Login running');
     const loginResponse = await fetch(url.concat('/auth/login'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
+      body: JSON.stringify(userPayload),
     });
 
-    const loginData = (await loginResponse.json()) as { accessToken: string; refreshToken: string };
-    console.log('🚀 ~ testAuthFlow ~ logindata:', loginData);
+    const loginData = (await loginResponse.json()) as RefreshToken;
+    console.log(' testAuthFlow ~ logindata:', loginData);
 
     console.log('Refresh Token running');
     const refreshResponse = await fetch(url.concat('/auth/refresh'), {
@@ -71,10 +51,7 @@ const testAuthFlow = async () => {
         refreshToken: loginData.refreshToken,
       }),
     });
-    const authData = (await refreshResponse.json()) as {
-      accessToken: string;
-      refreshToken: string;
-    };
+    const authData = (await refreshResponse.json()) as RefreshToken;
     console.log('🚀 ~ testAuthFlow ~ authData:', authData);
     const accessToken = authData.accessToken;
 
@@ -101,6 +78,55 @@ const testAuthFlow = async () => {
     console.error(error);
   }
 };
+
+const studentPayload = {
+  username: 'student2',
+  password: 'Mourya123@',
+  first_name: 'Student',
+  last_name: 'book',
+};
+
+const testParentStudentFlow = async () => {
+  try {
+    const parentData = userPayload;
+
+    console.log('Parent Logging in');
+    const loginRes = await fetch(`${url}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: parentData.username, password: parentData.password }),
+    });
+    const loginData = (await loginRes.json()) as RefreshToken;
+    const token = loginData.accessToken;
+    console.log('Token:', token ? 'Received' : 'Missing');
+
+    console.log('Creating Student');
+    const createStudentRes = await fetch(`${url}/students`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(studentPayload),
+    });
+
+    const createStudentData = await createStudentRes.json();
+    console.log('Created Student:', createStudentData);
+
+    console.log('Get all Students linked to Parent');
+    const getStudentsRes = await fetch(`${url}/students`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const students = await getStudentsRes.json();
+    console.log('All Students:', students);
+
+    console.log(' GET /students without token (expect 401)');
+    const noAuthRes = await fetch(`${url}/students`);
+    console.log('No auth status:', noAuthRes.status);
+  } catch (err) {
+    console.error('Test failed:', err);
+  }
+};
+
 generalTest();
-tasksTest();
-testAuthFlow();
+testAuthFlow().then(()=>testParentStudentFlow());

@@ -30,17 +30,19 @@ const authController = {
     try {
       const hashedPassword = await argon2.hash(password);
       const newUser = await userService.createUser({
-        username,
-        hashed_password: hashedPassword,
-        role,
-        first_name,
-        last_name,
+        user: {
+          username,
+          hashed_password: hashedPassword,
+          role,
+          first_name,
+          last_name,
+        },
       });
       const accessToken = createAccessToken({ userId: newUser.user_id });
       const refreshToken = await createStoreRefreshToken({ userId: newUser.user_id });
       return res.status(201).json({ accessToken, refreshToken });
     } catch (error) {
-      console.error(error);
+      console.error('Failed to create new user: ', error);
       return res.status(500).json({ error: 'Failed to create new user' });
     }
   },
@@ -66,7 +68,8 @@ const authController = {
       const accessToken = createAccessToken({ userId: user.user_id });
       const refreshToken = await createStoreRefreshToken({ userId: user.user_id });
       return res.status(201).json({ accessToken, refreshToken });
-    } catch {
+    } catch (error) {
+      console.error('Failed to login user: ', error);
       return res.status(500).json({ error: 'Failed to login user' });
     }
   },

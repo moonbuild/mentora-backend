@@ -1,22 +1,20 @@
-import { User, UserRole } from '../generated/prisma';
+import { Prisma, PrismaClient, User, UserRole } from '../generated/prisma';
 import prisma from '../lib/db';
-
-const userService = {
-  createUser: async ({
-    username,
-    hashed_password,
-    role,
-    first_name,
-    last_name,
-  }: {
+interface CreateUserService {
+  user: {
     username: string;
     hashed_password: string;
     role: UserRole;
     first_name: string;
     last_name: string;
-  }) => {
-    const userRow = await prisma.user.create({
-      data: { username, hashed_password, role, first_name, last_name },
+  };
+  dbClient?: Prisma.TransactionClient | PrismaClient;
+}
+const userService = {
+  createUser: async ({ dbClient, user }: CreateUserService) => {
+    const db = dbClient ?? prisma;
+    const userRow = await db.user.create({
+      data: user,
     });
     return userRow;
   },

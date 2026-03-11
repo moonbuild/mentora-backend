@@ -6,7 +6,7 @@ generator client {
   output   = "../src/generated/prisma"
 }
 datasource db {
-  provider = "sqlite"
+  provider = "sqlite" //later shift to postgresql
 }
 
 enum UserRole {
@@ -26,6 +26,61 @@ model User{
   updated_at DateTime  @default(now()) @updatedAt
 
   refresh_tokens RefreshToken[]
+
+// if user is student this links them to their parent connection
+  student_user StudentProfile? @relation("StudentUser") 
+// if user is parent this links them to all children
+  student_parent StudentProfile[] @relation("ParentRelation")
+  
+  lesson Lesson[]
+}
+
+// this is a bridge table
+model StudentProfile{
+  student_profile_id String @id @default(uuid())
+  parent_user_id String 
+  student_user_id String @unique
+
+  parent User @relation("ParentRelation", fields:[parent_user_id], references: [user_id], onDelete: Cascade)
+  student User @relation("StudentUser", fields:[student_user_id], references: [user_id], onDelete: Cascade)
+
+// this links the student to all lessons he is part of
+  booking Booking[]
+}
+
+model Lesson{
+  lesson_id String @id @default(uuid())
+  title String
+  description String
+  mentor_id String
+  
+  mentor User @relation(fields:[mentor_id], references: [user_id], onDelete: Cascade) 
+
+  booking Booking[] // all students signed up for this lesson
+  session Session[] 
+}
+
+model Session{
+  session_id String @id @default(uuid())
+  lesson_id String
+  date DateTime
+  topic String
+  summary String
+
+// Each session is linked to a lesson
+  lesson Lesson @relation(fields:[lesson_id], references: [lesson_id], onDelete: Cascade)
+}
+
+model Booking{
+  booking_id String @id @default(uuid())
+  lesson_id String 
+  student_profile_id String // we need to know the student and parent
+
+  lesson Lesson @relation(fields:[lesson_id], references: [lesson_id], onDelete: Cascade)
+  student StudentProfile @relation(fields:[student_profile_id], references: [student_profile_id], onDelete: Cascade)
+
+// prevents parent to book same lesson for same student more than 1
+  @@unique([lesson_id, student_profile_id])
 }
 
 model RefreshToken{
@@ -36,12 +91,4 @@ model RefreshToken{
   is_revoked Boolean @default(false)
   created_at DateTime  @default(now())
   updated_at DateTime  @default(now()) @updatedAt
-}
-
-model Task{
-  task_id String @id @default(uuid())
-  title String
-  description String
-  created_at DateTime @default(now())
-  updated_at DateTime  @default(now()) @updatedAt 
 }

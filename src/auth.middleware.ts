@@ -10,7 +10,7 @@ export const authenticate = (req: AuthRequest, res: Response, next: NextFunction
   const headerAuth = req.headers.authorization;
   const accessToken = headerAuth?.split(' ')[1];
   if (!headerAuth || !headerAuth.startsWith('Bearer ') || !accessToken) {
-    return res.status(400).json({ error: 'Access Denied, you do not have access token' });
+    return res.status(401).json({ error: 'Access Denied, you do not have access token' });
   }
 
   try {
