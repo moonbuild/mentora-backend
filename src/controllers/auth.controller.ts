@@ -5,6 +5,7 @@ import userService from '../service/user.service';
 import { createAccessToken, createStoreRefreshToken } from '../utils/auth.util';
 import prisma from '../lib/db';
 import jwt from 'jsonwebtoken';
+import { UserRole } from '../generated/prisma';
 
 const authController = {
   signup: async (req: Request, res: Response) => {
@@ -15,25 +16,34 @@ const authController = {
     if (!first_name) return res.status(400).json({ error: 'First name is required' });
     if (!last_name) return res.status(400).json({ error: 'Last name is required' });
 
+    // only mentor and parent can signup.
+    const validRoles = ['mentor', 'parent'];
+    if (!validRoles.includes(role))
+      return res.status(400).json({ error: `Invalid role, only ${validRoles.join(', ')}` });
+
+    // if username already taken then return
     const user = await userService.findUserByUsername({ username });
 
     if (user) {
       return res.status(409).json({ error: `Username ${username} already exists` });
     }
+
     try {
       const hashedPassword = await argon2.hash(password);
       const newUser = await userService.createUser({
-        username,
-        hashed_password: hashedPassword,
-        role,
-        first_name,
-        last_name,
+        user: {
+          username,
+          hashed_password: hashedPassword,
+          role,
+          first_name,
+          last_name,
+        },
       });
-      const accessToken = createAccessToken({ userId: newUser.user_id });
-      const refreshToken = await createStoreRefreshToken({ userId: newUser.user_id });
+      const accessToken = createAccessToken({ userId: newUser.user_id, role:newUser.role });
+      const refreshToken = await createStoreRefreshToken({ userId: newUser.user_id, role:newUser.role });
       return res.status(201).json({ accessToken, refreshToken });
     } catch (error) {
-      console.error(error);
+      console.error('Failed to create new user: ', error);
       return res.status(500).json({ error: 'Failed to create new user' });
     }
   },
@@ -56,10 +66,11 @@ const authController = {
     }
 
     try {
-      const accessToken = createAccessToken({ userId: user.user_id });
-      const refreshToken = await createStoreRefreshToken({ userId: user.user_id });
+      const accessToken = createAccessToken({ userId: user.user_id, role:user.role });
+      const refreshToken = await createStoreRefreshToken({ userId: user.user_id, role:user.role });
       return res.status(201).json({ accessToken, refreshToken });
-    } catch {
+    } catch (error) {
+      console.error('Failed to login user: ', error);
       return res.status(500).json({ error: 'Failed to login user' });
     }
   },
@@ -71,25 +82,22 @@ const authController = {
 
     try {
       const decoded = jwt.verify(oldRefreshToken, process.env['REFRESH_SECRET']!) as {
-        userId: string;
+        userId: string;role:UserRole;
       };
       const userId = decoded.userId;
+      const role = decoded.role;
       const dbToken = await prisma.refreshToken.findUnique({
         where: { token: oldRefreshToken, is_revoked: false },
       });
       if (!dbToken) {
         res.status(403).json({ error: 'Token is revoked' });
       }
-      const accessToken = createAccessToken({ userId });
-      const refreshToken = await createStoreRefreshToken({ userId });
+      const accessToken = createAccessToken({ userId: userId, role:role });
+      const refreshToken = await createStoreRefreshToken({ userId: userId, role:role });
       return res.status(201).json({ accessToken, refreshToken });
     } catch {
       return res.status(403).json({ error: 'Invalid refresh token' });
     }
-  },
-
-  protectedRouteTest: async (_: Request, res: Response) => {
-    return res.status(201).json({ message: 'hello' });
   },
 };
 export default authController;
