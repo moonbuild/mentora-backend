@@ -49,7 +49,7 @@ const bookingsController = {
       return res.status(201).json(booking);
     } catch (error) {
       console.error('Failed to create Booking ', error);
-      return res.status(500).json({ error: 'Failed to create lesson' });
+      return res.status(500).json({ error: 'Failed to create Booking' });
     }
   },
   fetchBookings: async (req: Request, res: AuthResponse) => {
