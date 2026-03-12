@@ -1,4 +1,4 @@
-import { Response,Request, Router } from 'express';
+import { Response, Request, Router } from 'express';
 import { authenticate } from '../auth.middleware';
 import userService from '../service/user.service';
 import { AuthResponse } from './interface/auth.interface';

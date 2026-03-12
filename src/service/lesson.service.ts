@@ -17,7 +17,11 @@ const lessonsService = {
     });
     return lesson;
   },
-  fetchLessons: async ({ mentorId }: { mentorId: string }) => {
+  fetchAllLessons: async () => {
+    const lessons = await prisma.lesson.findMany();
+    return lessons;
+  },
+  fetchMentorLessons: async ({ mentorId }: { mentorId: string }) => {
     const lessons = await prisma.lesson.findMany({
       where: {
         mentor_id: mentorId,

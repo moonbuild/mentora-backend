@@ -1,5 +1,8 @@
 const url = `http://localhost:3000`;
-interface RefreshToken {accessToken:string, refreshToken:string};
+interface RefreshToken {
+  accessToken: string;
+  refreshToken: string;
+}
 
 const generalTest = async () => {
   console.log('Testing base url');
@@ -14,12 +17,13 @@ const generalTest = async () => {
 };
 
 const userPayload = {
-  username: 'moonbuild9',
+  username: 'moonbuild13',
   password: 'Mourya123@',
   role: 'parent',
-  first_name: 'Mourya9',
+  first_name: 'Mourya11',
   last_name: 'Pranay',
 };
+
 const testAuthFlow = async () => {
   try {
     console.log('Signup running');
@@ -80,7 +84,7 @@ const testAuthFlow = async () => {
 };
 
 const studentPayload = {
-  username: 'student4',
+  username: 'student12',
   password: 'Mourya123@',
   first_name: 'Student',
   last_name: 'book',
@@ -129,11 +133,11 @@ const testParentStudentFlow = async () => {
 };
 
 const mentorPayload = {
-  username: 'mentor_test_1',
-  password: 'MentorPassword123@',
+  username: 'mentor6',
+  password: 'Mourya123@',
   role: 'mentor',
-  first_name: 'Test',
-  last_name: 'Mentor',
+  first_name: 'Mourya',
+  last_name: 'Pranay',
 };
 
 const lessonPayload = {
@@ -162,17 +166,17 @@ const testLessonSessionFlow = async () => {
     const loginRes = await fetch(`${url}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        username: mentorPayload.username, 
-        password: mentorPayload.password 
+      body: JSON.stringify({
+        username: mentorPayload.username,
+        password: mentorPayload.password,
       }),
     });
-    
+
     const loginData = (await loginRes.json()) as RefreshToken;
     const token = loginData.accessToken;
     console.log('Mentor Token:', token ? 'Received' : 'Missing');
 
-    if (!token) throw new Error("Mentor login failed, stopping test.");
+    if (!token) throw new Error('Mentor login failed, stopping test.');
 
     console.log('POST Creating Lesson...');
     const createLessonRes = await fetch(`${url}/lessons`, {
@@ -184,10 +188,10 @@ const testLessonSessionFlow = async () => {
       body: JSON.stringify(lessonPayload),
     });
 
-    const lessonData = await createLessonRes.json() as {lesson_id:string, id:string};
+    const lessonData = (await createLessonRes.json()) as { lesson_id: string; id: string };
     console.log('Created Lesson Response:', lessonData);
-    
-    const lessonId = lessonData.lesson_id || lessonData.id; 
+
+    const lessonId = lessonData.lesson_id || lessonData.id;
 
     console.log('GET fetching all Mentor Lessons...');
     const getLessonsRes = await fetch(`${url}/lessons`, {
@@ -211,20 +215,116 @@ const testLessonSessionFlow = async () => {
 
       console.log(`GET Fetching Sessions for Lesson ID: ${lessonId}...`);
       const getSessionsRes = await fetch(`${url}/lessons/${lessonId}/sessions`, {
-        headers: { Authorization: `Bearer ${token}` }, 
+        headers: { Authorization: `Bearer ${token}` },
       });
       const sessionsArray = await getSessionsRes.json();
       console.log('Lesson Sessions Array:', sessionsArray);
-      
     } else {
-      console.error('Skipping session tests: Failed to retrieve a valid lessonId from the lesson creation response.');
+      console.error(
+        'Skipping session tests: Failed to retrieve a valid lessonId from the lesson creation response.',
+      );
     }
-
   } catch (err) {
     console.error('Lesson/Session Test failed:', err);
   }
 };
 
+const testBookingFlow = async () => {
+  try {
+    console.log('Starting booking flow test');
+
+    console.log('Parent Logging in...');
+    const loginRes = await fetch(`${url}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: userPayload.username,
+        password: userPayload.password,
+      }),
+    });
+
+    const loginData = (await loginRes.json()) as RefreshToken;
+    const parentToken = loginData.accessToken;
+    console.log('Parent Token:', parentToken ? 'Received' : 'Missing');
+
+    // now get the studentid
+    console.log('Fetching Students linked to parent...');
+    const studentsRes = await fetch(`${url}/students`, {
+      headers: { Authorization: `Bearer ${parentToken}` },
+    });
+    // take one studentid
+    const students = (await studentsRes.json())as {user_id:string}[];
+    const studentId = students[0]?.user_id;
+    console.log('Target Student ID:', studentId);
+
+    // among all lessons we will create a 
+    console.log('Fetching available Lessons...');
+    const lessonsRes = await fetch(`${url}/lessons`, {
+      headers: { Authorization: `Bearer ${parentToken}` },
+    });
+    const lessons = await lessonsRes.json() as {lesson_id:string}[];
+    const lessonId = lessons[0]?.lesson_id;
+    console.log('Target Lesson ID:', lessons);
+
+    if (!studentId || !lessonId) {
+      throw new Error('Pre requisites missing: Need at least one student and one lesson.');
+    }
+
+    console.log('POST Creating Booking (Assigning Student to Lesson)');
+    const bookingPayload = { studentId, lessonId };
+    const createBookingRes = await fetch(`${url}/bookings`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${parentToken}`,
+      },
+      body: JSON.stringify(bookingPayload),
+    });
+    const bookingData = await createBookingRes.json();
+    console.log('testBookingFlow ~ bookingData:', bookingData);
+
+    console.log('Testing Duplicate Booking (should fail)...');
+    const duplicateRes = await fetch(`${url}/bookings`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${parentToken}`,
+      },
+      body: JSON.stringify(bookingPayload),
+    });
+    const duplicateData = await duplicateRes.json();
+    console.log('Duplicate booking response:', duplicateData);
+
+    console.log('GET Fetching Booking history...');
+    const historyRes = await fetch(`${url}/bookings`, {
+      headers: { Authorization: `Bearer ${parentToken}` },
+    });
+    const historyData = await historyRes.json();
+    console.log('🚀 ~ testBookingFlow ~ historyData:', historyData);
+
+    console.log('Student Logging in to check history...');
+    const sLoginRes = await fetch(`${url}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: studentPayload.username,
+        password: studentPayload.password,
+      }),
+    });
+    const sLoginData = (await sLoginRes.json()) as RefreshToken;
+    const studentToken = sLoginData.accessToken;
+
+    console.log('GET Student fetching their own bookings...');
+    const studentHistoryRes = await fetch(`${url}/bookings`, {
+      headers: { Authorization: `Bearer ${studentToken}` },
+    });
+    const studentHistoryData = await studentHistoryRes.json();
+    console.log('Student History View:', studentHistoryData);
+  } catch (err) {
+    console.error('Booking Flow Test failed:', err);
+  }
+};
+
 generalTest();
-testAuthFlow().then(()=>testParentStudentFlow());
-testLessonSessionFlow();
+testAuthFlow().then(()=>testParentStudentFlow()).then(()=>testLessonSessionFlow()).then(()=>testBookingFlow());
+// testBookingFlow();

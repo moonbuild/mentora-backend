@@ -5,15 +5,19 @@ import sessionsController from '../controllers/sessions.controller';
 
 const lessonsRouter = Router();
 
-
 // user must be a mentor to create a lesson
 lessonsRouter.post('/', async (req: Request, res: AuthResponse) => {
   return lessonsController.createLesson(req, res);
 });
 
-// fetch all lessons associated to a mentor
+// fetch all lessons, accessible to mentor and parent
 lessonsRouter.get('/', async (req: Request, res: AuthResponse) => {
-  return lessonsController.fetchLessons(req, res);
+  return lessonsController.fetchAllLessons(req, res);
+});
+
+// fetch all lessons associated to a mentor
+lessonsRouter.get('/mentor', async (req: Request, res: AuthResponse) => {
+  return lessonsController.fetchMentorLessons(req, res);
 });
 
 // only mentor can create sessions

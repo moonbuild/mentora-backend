@@ -39,8 +39,11 @@ const authController = {
           last_name,
         },
       });
-      const accessToken = createAccessToken({ userId: newUser.user_id, role:newUser.role });
-      const refreshToken = await createStoreRefreshToken({ userId: newUser.user_id, role:newUser.role });
+      const accessToken = createAccessToken({ userId: newUser.user_id, role: newUser.role });
+      const refreshToken = await createStoreRefreshToken({
+        userId: newUser.user_id,
+        role: newUser.role,
+      });
       return res.status(201).json({ accessToken, refreshToken });
     } catch (error) {
       console.error('Failed to create new user: ', error);
@@ -66,8 +69,8 @@ const authController = {
     }
 
     try {
-      const accessToken = createAccessToken({ userId: user.user_id, role:user.role });
-      const refreshToken = await createStoreRefreshToken({ userId: user.user_id, role:user.role });
+      const accessToken = createAccessToken({ userId: user.user_id, role: user.role });
+      const refreshToken = await createStoreRefreshToken({ userId: user.user_id, role: user.role });
       return res.status(201).json({ accessToken, refreshToken });
     } catch (error) {
       console.error('Failed to login user: ', error);
@@ -82,7 +85,8 @@ const authController = {
 
     try {
       const decoded = jwt.verify(oldRefreshToken, process.env['REFRESH_SECRET']!) as {
-        userId: string;role:UserRole;
+        userId: string;
+        role: UserRole;
       };
       const userId = decoded.userId;
       const role = decoded.role;
@@ -92,8 +96,8 @@ const authController = {
       if (!dbToken) {
         res.status(403).json({ error: 'Token is revoked' });
       }
-      const accessToken = createAccessToken({ userId: userId, role:role });
-      const refreshToken = await createStoreRefreshToken({ userId: userId, role:role });
+      const accessToken = createAccessToken({ userId: userId, role: role });
+      const refreshToken = await createStoreRefreshToken({ userId: userId, role: role });
       return res.status(201).json({ accessToken, refreshToken });
     } catch {
       return res.status(403).json({ error: 'Invalid refresh token' });
