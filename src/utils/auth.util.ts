@@ -1,15 +1,16 @@
 import jwt from 'jsonwebtoken';
 import { ACCESS_TOKEN_EXPIRE, REFRESH_TOKEN_EXPIRE } from './constants';
 import prisma from '../lib/db';
+import { UserRole } from '../generated/prisma';
 
-export const createAccessToken = ({ userId }: { userId: string }) => {
-  return jwt.sign({ userId, jti: crypto.randomUUID() }, process.env['ACCESS_TOKEN_SECRET']!, {
+export const createAccessToken = ({ userId, role }: { userId: string, role:UserRole }) => {
+  return jwt.sign({ userId,role, jti: crypto.randomUUID() }, process.env['ACCESS_TOKEN_SECRET']!, {
     expiresIn: ACCESS_TOKEN_EXPIRE,
   });
 };
 
-export const createStoreRefreshToken = async ({ userId }: { userId: string }) => {
-  const token = jwt.sign({ userId, jti: crypto.randomUUID() }, process.env['REFRESH_SECRET']!, {
+export const createStoreRefreshToken = async ({ userId, role }: { userId: string, role:UserRole }) => {
+  const token = jwt.sign({ userId,role, jti: crypto.randomUUID() }, process.env['REFRESH_SECRET']!, {
     expiresIn: REFRESH_TOKEN_EXPIRE,
   });
 

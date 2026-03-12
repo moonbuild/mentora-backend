@@ -1,13 +1,9 @@
-import { Prisma, PrismaClient, User, UserRole } from '../generated/prisma';
+import { Prisma, PrismaClient, User, } from '../generated/prisma';
 import prisma from '../lib/db';
+import { CreateUserDTO } from '../routes/interface/users.interface';
+
 interface CreateUserService {
-  user: {
-    username: string;
-    hashed_password: string;
-    role: UserRole;
-    first_name: string;
-    last_name: string;
-  };
+  user: CreateUserDTO;
   dbClient?: Prisma.TransactionClient | PrismaClient;
 }
 const userService = {

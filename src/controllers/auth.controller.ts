@@ -5,6 +5,7 @@ import userService from '../service/user.service';
 import { createAccessToken, createStoreRefreshToken } from '../utils/auth.util';
 import prisma from '../lib/db';
 import jwt from 'jsonwebtoken';
+import { UserRole } from '../generated/prisma';
 
 const authController = {
   signup: async (req: Request, res: Response) => {
@@ -38,8 +39,8 @@ const authController = {
           last_name,
         },
       });
-      const accessToken = createAccessToken({ userId: newUser.user_id });
-      const refreshToken = await createStoreRefreshToken({ userId: newUser.user_id });
+      const accessToken = createAccessToken({ userId: newUser.user_id, role:newUser.role });
+      const refreshToken = await createStoreRefreshToken({ userId: newUser.user_id, role:newUser.role });
       return res.status(201).json({ accessToken, refreshToken });
     } catch (error) {
       console.error('Failed to create new user: ', error);
@@ -65,8 +66,8 @@ const authController = {
     }
 
     try {
-      const accessToken = createAccessToken({ userId: user.user_id });
-      const refreshToken = await createStoreRefreshToken({ userId: user.user_id });
+      const accessToken = createAccessToken({ userId: user.user_id, role:user.role });
+      const refreshToken = await createStoreRefreshToken({ userId: user.user_id, role:user.role });
       return res.status(201).json({ accessToken, refreshToken });
     } catch (error) {
       console.error('Failed to login user: ', error);
@@ -81,17 +82,18 @@ const authController = {
 
     try {
       const decoded = jwt.verify(oldRefreshToken, process.env['REFRESH_SECRET']!) as {
-        userId: string;
+        userId: string;role:UserRole;
       };
       const userId = decoded.userId;
+      const role = decoded.role;
       const dbToken = await prisma.refreshToken.findUnique({
         where: { token: oldRefreshToken, is_revoked: false },
       });
       if (!dbToken) {
         res.status(403).json({ error: 'Token is revoked' });
       }
-      const accessToken = createAccessToken({ userId });
-      const refreshToken = await createStoreRefreshToken({ userId });
+      const accessToken = createAccessToken({ userId: userId, role:role });
+      const refreshToken = await createStoreRefreshToken({ userId: userId, role:role });
       return res.status(201).json({ accessToken, refreshToken });
     } catch {
       return res.status(403).json({ error: 'Invalid refresh token' });

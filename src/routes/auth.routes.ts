@@ -1,5 +1,4 @@
 import { Router, Request, Response } from 'express';
-import { AuthRequest } from '../auth.middleware';
 import authController from '../controllers/auth.controller';
 
 const authRouter = Router();
@@ -12,7 +11,7 @@ authRouter.post('/login', async (req: Request, res: Response) => {
   return authController.login(req, res);
 });
 
-authRouter.post('/refresh', async (req: AuthRequest, res: Response) => {
+authRouter.post('/refresh', async (req: Request, res: Response) => {
   return authController.refresh(req, res);
 });
 

@@ -1,17 +1,20 @@
-import { Response } from 'express';
+import { Request } from 'express';
 import prisma from '../lib/db';
-import { AuthRequest } from '../auth.middleware';
-import { SignupReq } from '../routes/interface/auth.interface';
+import { AuthResponse, SignupReq } from '../routes/interface/auth.interface';
 import userService from '../service/user.service';
 import argon2 from 'argon2';
 import { UserRole } from '../generated/prisma';
+import { CreateUserDTO } from '../routes/interface/users.interface';
+import studentProfileService from '../service/studentProfile.service';
 
 const studentsController = {
-  createStudent: async (req: AuthRequest, res: Response) => {
-    const parentId = req.userId;
+  createStudent: async (req: Request, res: AuthResponse) => {
+    const {userId: parentId} = res.locals;
     if (!parentId) return res.status(400).json({ error: 'user id is not present' });
-    //  we have parent id, make validations on the data sent, check if username already exists.
-    // create new studentprofile and link parent with student
+    //  we have parent id, three steps
+    // step1  make validations on the data sent, check if username already exists.
+    // step2 create new studentprofile 
+    // step3 link parent with student
     const { username, password, first_name, last_name } = req.body as SignupReq;
     if (!username) return res.status(400).json({ error: 'Username is required' });
     if (!password) return res.status(400).json({ error: 'Password is required' });
@@ -28,8 +31,9 @@ const studentsController = {
 
     // validation done!
     try {
+      // using transaction as i dont want one operation to succeed while the other fails
       await prisma.$transaction(async (tx) => {
-        const currentUser = {
+        const currentUser:CreateUserDTO = {
           username,
           hashed_password: hashedPassword,
           role,
@@ -38,12 +42,8 @@ const studentsController = {
         };
         const studentUser = await userService.createUser({ dbClient: tx, user: currentUser });
 
-        await tx.studentProfile.create({
-          data: {
-            parent_user_id: parentId,
-            student_user_id: studentUser.user_id,
-          },
-        });
+        await studentProfileService.createStudentProfile({dbClient:tx, parentId, studentId:studentUser.user_id}) 
+        
       });
       return res
         .status(201)
@@ -54,25 +54,12 @@ const studentsController = {
     }
   },
 
-  getMyStudents: async (req: AuthRequest, res: Response) => {
-    const parentId = req.userId;
+  getMyStudents: async (req: Request, res: AuthResponse) => {
+    const parentId = res.locals.userId;
     if (!parentId) return res.status(400).json({ error: 'user id is not present' });
-    // fetch relevant details of all students that are linked to parentid
     try {
-      const students = await prisma.studentProfile.findMany({
-        where: { parent_user_id: parentId },
-        include: {
-          student: {
-            select: {
-              user_id: true,
-              username: true,
-              first_name: true,
-              last_name: true,
-            },
-          },
-        },
-      });
-      return res.status(200).json(students.map((s) => s.student));
+      const students = await studentProfileService.findStudents({parentId});
+      return res.status(200).json(students);
     } catch (error) {
       console.error('Error fetching linked students to parents: ', error);
       return res.status(500).json({ error: 'Failed to fetch students' });

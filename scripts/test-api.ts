@@ -14,10 +14,10 @@ const generalTest = async () => {
 };
 
 const userPayload = {
-  username: 'moonbuild8',
+  username: 'moonbuild9',
   password: 'Mourya123@',
   role: 'parent',
-  first_name: 'Mourya8',
+  first_name: 'Mourya9',
   last_name: 'Pranay',
 };
 const testAuthFlow = async () => {
@@ -80,7 +80,7 @@ const testAuthFlow = async () => {
 };
 
 const studentPayload = {
-  username: 'student2',
+  username: 'student4',
   password: 'Mourya123@',
   first_name: 'Student',
   last_name: 'book',
