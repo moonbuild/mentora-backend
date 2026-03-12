@@ -9,7 +9,7 @@ const sessionsController = {
     const { role } = res.locals;
     const lessonId = req.params['lessonId'] as string;
     if (role !== 'mentor')
-      return res.status(401).json({ error: 'Only Mentors are allowed to create lessons' });
+      return res.status(401).json({ error: 'Only Mentors are allowed to create sessions' });
 
     const { topic, date: dateRaw, summary } = req.body as SessionDTO;
     const date = new Date(dateRaw);

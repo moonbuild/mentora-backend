@@ -38,7 +38,7 @@ app.use('/', router);
 
 prisma
   .$connect()
-  .then(() => console.log('Successfully connected to Sqlite'))
+  .then(() => console.log('Successfully connected to Postgresql'))
   .catch((err) => console.error('Failed to connect to db:', err));
 
 app.listen(port, () => {
