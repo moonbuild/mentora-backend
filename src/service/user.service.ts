@@ -1,4 +1,4 @@
-import { Prisma, PrismaClient, User, } from '../generated/prisma';
+import { Prisma, PrismaClient, User } from '../generated/prisma';
 import prisma from '../lib/db';
 import { CreateUserDTO } from '../routes/interface/users.interface';
 
@@ -11,6 +11,14 @@ const userService = {
     const db = dbClient ?? prisma;
     const userRow = await db.user.create({
       data: user,
+      select: {
+        // we need to show only necessary details
+        user_id: true,
+        first_name: true,
+        last_name: true,
+        username: true,
+        role: true,
+      },
     });
     return userRow;
   },
@@ -19,13 +27,14 @@ const userService = {
       where: {
         user_id: userId,
       },
-      select:{
+      select: {
         // we need to show only necessary details
-        first_name:true,
-        last_name:true,
-        username:true,
-        role:true
-      }
+        user_id: true,
+        first_name: true,
+        last_name: true,
+        username: true,
+        role: true,
+      },
     });
     return user;
   },

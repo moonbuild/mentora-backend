@@ -1,4 +1,4 @@
-import { Prisma, PrismaClient,  } from '../generated/prisma';
+import { Prisma, PrismaClient } from '../generated/prisma';
 import prisma from '../lib/db';
 
 interface CreateStudentProfile {
@@ -24,7 +24,7 @@ const studentProfileService = {
         parent_user_id: parentId,
       },
       include: {
-        student: {
+        student_user: {
           select: {
             user_id: true,
             username: true,
@@ -34,8 +34,22 @@ const studentProfileService = {
         },
       },
     });
-    return students.map(s=>s.student);
+    return students.map((s) => s.student_user);
   },
-  
+  findStudentProfileByIds: async ({
+    studentId,
+    parentId,
+  }: {
+    studentId: string;
+    parentId: string;
+  }) => {
+    const student = await prisma.studentProfile.findFirst({
+      where: {
+        parent_user_id: parentId,
+        student_user_id: studentId,
+      },
+    });
+    return student;
+  },
 };
 export default studentProfileService;

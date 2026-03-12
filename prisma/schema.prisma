@@ -42,7 +42,7 @@ model StudentProfile{
   student_user_id String @unique
 
   parent User @relation("ParentRelation", fields:[parent_user_id], references: [user_id], onDelete: Cascade)
-  student User @relation("StudentUser", fields:[student_user_id], references: [user_id], onDelete: Cascade)
+  student_user User @relation("StudentUser", fields:[student_user_id], references: [user_id], onDelete: Cascade)
 
 // this links the student to all lessons he is part of
   booking Booking[]
@@ -77,10 +77,10 @@ model Booking{
   student_profile_id String // we need to know the student and parent
 
   lesson Lesson @relation(fields:[lesson_id], references: [lesson_id], onDelete: Cascade)
-  student StudentProfile @relation(fields:[student_profile_id], references: [student_profile_id], onDelete: Cascade)
+  student_profile StudentProfile @relation(fields:[student_profile_id], references: [student_profile_id], onDelete: Cascade)
 
 // prevents parent to book same lesson for same student more than 1
-  @@unique([lesson_id, student_profile_id])
+  @@unique([lesson_id, student_profile_id], name:"student_lesson_pair")
 }
 
 model RefreshToken{

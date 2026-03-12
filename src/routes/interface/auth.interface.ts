@@ -4,8 +4,8 @@ import { Response } from 'express';
 export interface JwtPayload {
   userId: string;
   role: string;
-  iat?: number; 
-  exp?: number; 
+  iat?: number;
+  exp?: number;
 }
 export interface AuthLocals {
   userId: string;

@@ -32,7 +32,7 @@ const sessionsController = {
       return res.status(500).json({ error: 'Failed to create session' });
     }
   },
-  
+
   fetchSessions: async (req: Request, res: AuthResponse) => {
     // any role can view the sessions
     // using the lesson id from params fetch related sessions
