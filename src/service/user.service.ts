@@ -14,11 +14,18 @@ const userService = {
     });
     return userRow;
   },
-  findUserByUserId: async ({ userId }: { userId: string }): Promise<User | null> => {
+  findUserByUserId: async ({ userId }: { userId: string }) => {
     const user = await prisma.user.findUnique({
       where: {
         user_id: userId,
       },
+      select:{
+        // we need to show only necessary details
+        first_name:true,
+        last_name:true,
+        username:true,
+        role:true
+      }
     });
     return user;
   },

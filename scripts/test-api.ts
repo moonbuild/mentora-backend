@@ -128,5 +128,103 @@ const testParentStudentFlow = async () => {
   }
 };
 
+const mentorPayload = {
+  username: 'mentor_test_1',
+  password: 'MentorPassword123@',
+  role: 'mentor',
+  first_name: 'Test',
+  last_name: 'Mentor',
+};
+
+const lessonPayload = {
+  title: 'Introduction to Algebra',
+  description: 'Basic algebraic concepts and equations.',
+};
+
+const sessionPayload = {
+  topic: 'Solving for X',
+  date: new Date().toISOString(),
+  summary: 'Students will learn how to isolate variables.',
+};
+
+const testLessonSessionFlow = async () => {
+  try {
+    console.log('Starting Lesson & Session Flow Test');
+
+    console.log('Signing up Mentor...');
+    await fetch(`${url}/auth/signup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(mentorPayload),
+    });
+
+    console.log('Mentor Logging in...');
+    const loginRes = await fetch(`${url}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        username: mentorPayload.username, 
+        password: mentorPayload.password 
+      }),
+    });
+    
+    const loginData = (await loginRes.json()) as RefreshToken;
+    const token = loginData.accessToken;
+    console.log('Mentor Token:', token ? 'Received' : 'Missing');
+
+    if (!token) throw new Error("Mentor login failed, stopping test.");
+
+    console.log('POST Creating Lesson...');
+    const createLessonRes = await fetch(`${url}/lessons`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(lessonPayload),
+    });
+
+    const lessonData = await createLessonRes.json() as {lesson_id:string, id:string};
+    console.log('Created Lesson Response:', lessonData);
+    
+    const lessonId = lessonData.lesson_id || lessonData.id; 
+
+    console.log('GET fetching all Mentor Lessons...');
+    const getLessonsRes = await fetch(`${url}/lessons`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const lessonsData = await getLessonsRes.json();
+    console.log('Mentor Lessons Array:', lessonsData);
+
+    if (lessonId) {
+      console.log(`POST Creating Session for Lesson ID: ${lessonId}...`);
+      const createSessionRes = await fetch(`${url}/lessons/${lessonId}/sessions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(sessionPayload),
+      });
+      const sessionData = await createSessionRes.json();
+      console.log('Created Session Response:', sessionData);
+
+      console.log(`GET Fetching Sessions for Lesson ID: ${lessonId}...`);
+      const getSessionsRes = await fetch(`${url}/lessons/${lessonId}/sessions`, {
+        headers: { Authorization: `Bearer ${token}` }, 
+      });
+      const sessionsArray = await getSessionsRes.json();
+      console.log('Lesson Sessions Array:', sessionsArray);
+      
+    } else {
+      console.error('Skipping session tests: Failed to retrieve a valid lessonId from the lesson creation response.');
+    }
+
+  } catch (err) {
+    console.error('Lesson/Session Test failed:', err);
+  }
+};
+
 generalTest();
 testAuthFlow().then(()=>testParentStudentFlow());
+testLessonSessionFlow();
