@@ -11,6 +11,7 @@ const port = process.env['PORT'];
 const databaseUrl = process.env['DATABASE_URL'];
 const accessTokenSecret = process.env['ACCESS_TOKEN_SECRET'];
 const refreshSecret = process.env['REFRESH_SECRET'];
+const groqAPI = process.env['GROQ_API_KEY'];
 
 if (!port) {
   console.error('CRITICAL ERROR: PORT env is missing');
@@ -29,6 +30,11 @@ if (!accessTokenSecret) {
 
 if (!refreshSecret) {
   console.error('CRITICAL ERROR: REFRESH_SECRET env is missing');
+  process.exit(1);
+}
+
+if (!groqAPI) {
+  console.error('CRITICAL ERROR: GROQ_API_KEY env is missing');
   process.exit(1);
 }
 

@@ -3,15 +3,13 @@ import { BookingDTO } from '../routes/interface/booking.interface';
 import { Request } from 'express';
 import studentProfileService from '../service/studentProfile.service';
 import bookingsService from '../service/bookings.service';
-import prisma from '../lib/db';
 
 const bookingsController = {
   createBooking: async (req: Request, res: AuthResponse) => {
-    // to create a booking,
-    // user needs to be parent
     const { userId: parentId, role } = res.locals;
+    // only parents are authorized to create booking
     if (role !== 'parent')
-      return res.status(401).json({ error: 'Only Parents are allowed to create Bookings' });
+      return res.status(403).json({ error: 'Only Parents are allowed to create Bookings' });
 
     const { studentId, lessonId } = req.body as BookingDTO;
 
@@ -26,20 +24,17 @@ const bookingsController = {
         parentId,
       });
       if (!studentProfile)
-        return res.status(400).json({ error: 'Student Parent Relation does not exist' });
+        return res.status(403).json({ error: 'Student Parent Relation does not exist' });
 
       // check if student is already booked to lesson
-      const existingBooking = await prisma.booking.findUnique({
-        where: {
-          student_lesson_pair: {
-            lesson_id: lessonId,
-            student_profile_id: studentProfile.student_profile_id,
-          },
-        },
+      const existingBooking = await bookingsService.bookingAlreadyExists({
+        lessonId,
+        studentProfileId: studentProfile.student_profile_id,
       });
-      // if already existing return bad request
+
+      // if already existing return conflict
       if (existingBooking)
-        return res.status(400).json({ error: 'Student is already registered to the lesson' });
+        return res.status(409).json({ error: 'Student is already registered to the lesson' });
 
       // now that we have the studentProfileId we can assign a student to the class that parent wishes to assign
       const booking = await bookingsService.createBooking({
@@ -53,14 +48,15 @@ const bookingsController = {
     }
   },
   fetchBookings: async (req: Request, res: AuthResponse) => {
-    // only parents and students can view their bookings
     const { userId: userId, role } = res.locals;
+    // only parents and students can view their bookings
     if (role === 'mentor')
       return res
-        .status(401)
+        .status(403)
         .json({ error: 'Only Parents & Students are allowed to view their Booking history' });
 
     try {
+      // dynamic filter
       const studentProfile =
         role === 'parent' ? { parent_user_id: userId } : { student_user_id: userId };
 

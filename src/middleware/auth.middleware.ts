@@ -1,7 +1,7 @@
 import { Request, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { AuthResponse, JwtPayload } from './routes/interface/auth.interface';
-import { isValidRole } from './utils/validations.util';
+import { AuthResponse, JwtPayload } from '../routes/interface/auth.interface';
+import { isValidRole } from '../utils/validations.util';
 
 export const authenticate = (req: Request, res: AuthResponse, next: NextFunction) => {
   // check if authorization request is vlaid by checking is token is there and it is sending authorization bearer
