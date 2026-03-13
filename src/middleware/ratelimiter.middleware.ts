@@ -1,4 +1,4 @@
-import rateLimit from "express-rate-limit";
+import rateLimit from 'express-rate-limit';
 
 // each ip is limited to 5 requests per minute for llm
 export const summarizelimiter = rateLimit({

@@ -21,7 +21,7 @@ const sessionsController = {
     if (!summary) return res.status(400).json({ error: 'Summary is required' });
 
     try {
-      const session = await sessionsService.createSession({topic, date, summary, lessonId});
+      const session = await sessionsService.createSession({ topic, date, summary, lessonId });
       return res.status(200).json(session);
     } catch (error) {
       console.error('Failed to create session ', error);
@@ -34,7 +34,7 @@ const sessionsController = {
     // using the lesson id from params fetch related sessions
     const lessonId = req.params['lessonId'] as string;
     try {
-      const sessions = await sessionsService.findSessionsByLessonId({lessonId});
+      const sessions = await sessionsService.findSessionsByLessonId({ lessonId });
       return res.status(200).json(sessions);
     } catch (error) {
       console.error('Failed to fetch sessions ', error);

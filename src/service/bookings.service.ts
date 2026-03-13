@@ -16,18 +16,23 @@ const bookingsService = {
     });
     return booking;
   },
-        bookingAlreadyExists :async({lessonId, studentProfileId}:{lessonId: string, studentProfileId:string})=>{
-
-        const booking = await prisma.booking.findUnique({
-        where: {
-          student_lesson_pair: {
-            lesson_id: lessonId,
-            student_profile_id: studentProfileId
-          },
+  bookingAlreadyExists: async ({
+    lessonId,
+    studentProfileId,
+  }: {
+    lessonId: string;
+    studentProfileId: string;
+  }) => {
+    const booking = await prisma.booking.findUnique({
+      where: {
+        student_lesson_pair: {
+          lesson_id: lessonId,
+          student_profile_id: studentProfileId,
         },
-      });
-      return booking;
-    },
+      },
+    });
+    return booking;
+  },
   fetchBookingsByProfileId: async ({ studentProfileId }: { studentProfileId: string }) => {
     const lessons = await prisma.booking.findMany({
       where: {

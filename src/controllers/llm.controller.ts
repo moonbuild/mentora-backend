@@ -10,7 +10,9 @@ const llmController = {
       return res.status(400).json({ error: 'Text is missing or empty.' });
     }
     if (text.length < 50) {
-      return res.status(400).json({ error: 'Text is too short. Please provide at least 50 characters.' });
+      return res
+        .status(400)
+        .json({ error: 'Text is too short. Please provide at least 50 characters.' });
     }
     if (text.length > 9000) {
       return res.status(413).json({ error: 'text too large. Maximum 9,000 characters allowed.' });
@@ -28,9 +30,9 @@ const llmController = {
               Be consistent with this format every time.
             `,
           },
-          { 
-            role: 'user', 
-            content: `Summarize the following text: ${text}` 
+          {
+            role: 'user',
+            content: `Summarize the following text: ${text}`,
           },
         ],
       });
@@ -44,20 +46,20 @@ const llmController = {
 
       return res.status(200).json({
         summary,
-        model: MODEL_NAME
+        model: MODEL_NAME,
       });
     } catch (error: any) {
       console.error('Summarization Error:', error);
 
-      // if Groq/LLM provider returns an error 
+      // if Groq/LLM provider returns an error
       if (error.status) {
-        return res.status(502).json({ 
-          error: 'The summarization service is temporarily unavailable' 
+        return res.status(502).json({
+          error: 'The summarization service is temporarily unavailable',
         });
       }
 
-      return res.status(500).json({ 
-        error: 'An internal error occurred while processing the request' 
+      return res.status(500).json({
+        error: 'An internal error occurred while processing the request',
       });
     }
   },

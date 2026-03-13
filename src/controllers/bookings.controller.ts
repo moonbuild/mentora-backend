@@ -27,7 +27,10 @@ const bookingsController = {
         return res.status(403).json({ error: 'Student Parent Relation does not exist' });
 
       // check if student is already booked to lesson
-      const existingBooking = await bookingsService.bookingAlreadyExists({ lessonId, studentProfileId: studentProfile.student_profile_id });
+      const existingBooking = await bookingsService.bookingAlreadyExists({
+        lessonId,
+        studentProfileId: studentProfile.student_profile_id,
+      });
 
       // if already existing return conflict
       if (existingBooking)

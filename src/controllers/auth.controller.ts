@@ -63,7 +63,7 @@ const authController = {
     if (!password) return res.status(400).json({ error: 'Password is required' });
 
     try {
-// validate if username is already taken
+      // validate if username is already taken
       const user = await userService.findUserByUsername({ username });
 
       if (!user) {
