@@ -10,29 +10,32 @@ import studentProfileService from '../service/studentProfile.service';
 const studentsController = {
   createStudent: async (req: Request, res: AuthResponse) => {
     const { userId: parentId, role } = res.locals;
-    if (!parentId) return res.status(400).json({ error: 'user id is not present' });
     if (role !== 'parent')
-      return res.status(400).json({ error: 'Only Parents can create students' });
+      return res.status(403).json({ error: 'Only Parents can create students' });
     //  we have parent id, three steps
     // step1  make validations on the data sent, check if username already exists.
-    // step2 create new studentprofile
-    // step3 link parent with student
     const { username, password, first_name, last_name } = req.body as SignupReq;
     if (!username) return res.status(400).json({ error: 'Username is required' });
     if (!password) return res.status(400).json({ error: 'Password is required' });
+    if (password.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters long' });
+    }
+    if (password.length > 64) {
+      return res.status(400).json({ error: 'Password is too long (max 64 characters)' });
+    }
     if (!first_name) return res.status(400).json({ error: 'First name is required' });
     if (!last_name) return res.status(400).json({ error: 'Last name is required' });
 
-    const studentRole = 'student' as UserRole;
-    const hashedPassword = await argon2.hash(password);
-    const user = await userService.findUserByUsername({ username });
+    const studentRole = UserRole.student;
 
-    if (user) {
-      return res.status(409).json({ error: `Username ${username} already exists` });
-    }
-
-    // validation done!
     try {
+      const hashedPassword = await argon2.hash(password);
+      const user = await userService.findUserByUsername({ username });
+
+      if (user) {
+        return res.status(409).json({ error: `Username ${username} already exists` });
+      }
+
       // using transaction as i dont want one operation to succeed while the other fails
       const student = await prisma.$transaction(async (tx) => {
         const currentUser: CreateUserDTO = {
@@ -42,8 +45,10 @@ const studentsController = {
           first_name,
           last_name,
         };
+        // step2 create new student user
         const studentUser = await userService.createUser({ dbClient: tx, user: currentUser });
 
+        // step3 create new studentprofile
         await studentProfileService.createStudentProfile({
           dbClient: tx,
           parentId,
@@ -59,8 +64,9 @@ const studentsController = {
   },
 
   getMyStudents: async (req: Request, res: AuthResponse) => {
-    const parentId = res.locals.userId;
-    if (!parentId) return res.status(400).json({ error: 'user id is not present' });
+    const { userId: parentId, role } = res.locals;
+    if (role !== 'parent')
+      return res.status(403).json({ error: 'Only Parents can view their students' });
     try {
       const students = await studentProfileService.findStudents({ parentId });
       return res.status(200).json(students);

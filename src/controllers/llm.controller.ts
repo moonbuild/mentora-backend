@@ -13,7 +13,7 @@ const llmController = {
       return res.status(400).json({ error: 'Text is too short. Please provide at least 50 characters.' });
     }
     if (text.length > 9000) {
-      return res.status(413).json({ error: 'Payload too large. Maximum 9,000 characters allowed.' });
+      return res.status(413).json({ error: 'text too large. Maximum 9,000 characters allowed.' });
     }
 
     try {

@@ -1,13 +1,10 @@
 
-async function signup() {
-  const API_URL = 'http://localhost:3000/auth/signup';
+async function login() {
+  const API_URL = 'http://localhost:3000/auth/login';
 
   const parentPayload = {
-    username: 'moonbuild',
+    username: 'student1',
     password: 'Mourya123@',
-    role: 'parent',
-    first_name: 'Mourya',
-    last_name: 'Pranay',
   }
 
   try {
@@ -26,7 +23,7 @@ async function signup() {
       return;
     }
 
-    console.log('--- Signup Successful ---');
+    console.log('--- Login Successful ---');
     console.log('User:', data);
 
   } catch (error) {
@@ -34,4 +31,4 @@ async function signup() {
   }
 }
 
-signup();
+login();

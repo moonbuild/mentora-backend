@@ -12,6 +12,12 @@ const authController = {
     const { username, password, role, first_name, last_name } = req.body as SignupReq;
     if (!username) return res.status(400).json({ error: 'Username is required' });
     if (!password) return res.status(400).json({ error: 'Password is required' });
+    if (password.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters long' });
+    }
+    if (password.length > 64) {
+      return res.status(400).json({ error: 'Password is too long (max 64 characters)' });
+    }
     if (!role) return res.status(400).json({ error: 'Role is required' });
     if (!first_name) return res.status(400).json({ error: 'First name is required' });
     if (!last_name) return res.status(400).json({ error: 'Last name is required' });
@@ -56,19 +62,20 @@ const authController = {
     if (!username) return res.status(400).json({ error: 'Username is required' });
     if (!password) return res.status(400).json({ error: 'Password is required' });
 
-    const user = await userService.findUserByUsername({ username });
-
-    if (!user) {
-      return res.status(400).json({ error: `User with ${username} does not exist` });
-    }
-
-    // now verify passwords
-    const isPasswordMatch = await argon2.verify(user.hashed_password, password);
-    if (!isPasswordMatch) {
-      return res.status(400).json({ error: `Incorrect Password` });
-    }
-
     try {
+// validate if username is already taken
+      const user = await userService.findUserByUsername({ username });
+
+      if (!user) {
+        return res.status(404).json({ error: `User with ${username} does not exist` });
+      }
+
+      // now verify passwords
+      const isPasswordMatch = await argon2.verify(user.hashed_password, password);
+      if (!isPasswordMatch) {
+        return res.status(400).json({ error: `Incorrect Password` });
+      }
+      // now create access token and refresh token
       const accessToken = createAccessToken({ userId: user.user_id, role: user.role });
       const refreshToken = await createStoreRefreshToken({ userId: user.user_id, role: user.role });
       return res.status(201).json({ accessToken, refreshToken });
@@ -81,7 +88,7 @@ const authController = {
   refresh: async (req: Request, res: Response) => {
     // here we check if refresh token is valid
     const oldRefreshToken = req.body.refreshToken;
-    if (!oldRefreshToken) return res.status(401).json({ error: 'No refresh token' });
+    if (!oldRefreshToken) return res.status(400).json({ error: 'Missing refresh token' });
 
     try {
       const decoded = jwt.verify(oldRefreshToken, process.env['REFRESH_SECRET']!) as {
@@ -94,7 +101,7 @@ const authController = {
         where: { token: oldRefreshToken, is_revoked: false },
       });
       if (!dbToken) {
-        res.status(403).json({ error: 'Token is revoked' });
+        res.status(403).json({ error: 'Token is expired' });
       }
       const accessToken = createAccessToken({ userId: userId, role: role });
       const refreshToken = await createStoreRefreshToken({ userId: userId, role: role });

@@ -1,8 +1,9 @@
 
 async function getSummary(textToSummarize) {
     const API_URL = 'http://localhost:3000/llm/summarize';
-    // since it is protected by oauth, we need a auth token first.
-    const accessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJhOTQ0N2M0ZS1mYWNhLTQzYjUtYWE1Mi00N2MzMWMzZWI5YjAiLCJyb2xlIjoicGFyZW50IiwianRpIjoiMzg5NDBiZTEtYjg5My00YjkyLWE5NWItZWRkNzY5ZDc3YjczIiwiaWF0IjoxNzczMzQzMjUyLCJleHAiOjE3NzMzNDY4NTJ9.mDxGUK0zfogWxtWGEm5MxyhAJvyTvKhyChiHL2m_T3o';
+
+    // since it is protected by oauth, we need a access token first.
+    const accessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIzNmRiMTMyNi1hZGIyLTRkZWItYTExMi00OWRkMjMyZTRkYTUiLCJyb2xlIjoicGFyZW50IiwianRpIjoiOGRhNjZhYTUtNzVjNy00MGRjLWI1MTQtNTkzOTFiNzgzNmYzIiwiaWF0IjoxNzczMzc5MTk3LCJleHAiOjE3NzMzODI3OTd9.VGa-2zns_c-lDifm3OKPeJJOaqcMr2rBj4ga-GLiMX0'
 
     try {
         const response = await fetch(API_URL, {

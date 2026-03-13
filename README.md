@@ -1,4 +1,6 @@
-# mentora-backend
+# Mentora backend
+
+![Relationship Diagram](mentora.png)
 
 A Node.js/TypeScript REST API backend for the Mentora platform connecting mentors, parents, and students through lessons, sessions, and bookings. Built with Express, Prisma ORM, PostgreSQL, and Groq for LLM interactions.
 
@@ -20,7 +22,7 @@ A Node.js/TypeScript REST API backend for the Mentora platform connecting mentor
 ### 1. Install dependencies
 
 ```bash
-npm i
+npm install
 ```
 
 ### 2. Generate Prisma client (if not already generated with install)
@@ -95,6 +97,7 @@ Entry point: `src/index.ts`
  ┣ 📂service         # Database operations via Prisma
  ┃ ┣ bookings.service.ts
  ┃ ┣ lesson.service.ts
+ ┃ ┣ sessions.service.ts
  ┃ ┣ studentProfile.service.ts
  ┃ ┗ user.service.ts
  ┣ 📂utils           # Helpers, constants, and validation
@@ -110,7 +113,7 @@ Entry point: `src/index.ts`
 Request -> Route -> Controller -> Service -> Prisma -> PostgreSQL
 ```
 
-Each layer has a single responsibility: routes define endpoints, controllers handle logic and auth checks, and services encapsulate all database queries.
+Each layer has a single responsibility: routes define endpoints, controllers handle logic and auth checks, and services perform database queries.
 
 ---
 
@@ -151,11 +154,11 @@ If the Groq API is not available, you can disable the LLM routes in `src/index.t
 
 ### Changing the LLM Model
 
-To switch models or update the API key/base URL, edit `src/controllers/llm.controller.ts`.
+To switch models or base URL, edit `src/lib/openai.ts` and visit `src/controllers/llm.controller.ts`.
 
 ### Database Schema
 
-See `schema.prisma` for the full data model.
+See `prisma/schema.prisma` for the full data model.
 
 ---
 
@@ -170,3 +173,16 @@ See `schema.prisma` for the full data model.
 | `/llm` | `llm.router.ts` | LLM chat interactions |
 
 See `src/routes/index.ts` for the full route registration.
+
+---
+ 
+## API Documentation
+ 
+Full API documentation is available in [`API_DOCUMENTATION.md`](./API_DOCUMENTATION.md), including request/response examples, field references, error codes, and a role permission table for every endpoint.
+ 
+---
+ 
+## Testing the API
+ 
+A set of ready to run fetch scripts is available in the `/scripts` folder one file per endpoint. Open any script, fill in the variables at the top, and run it with `node`. See [`API_DOCUMENTATION.md`](./API_DOCUMENTATION.md) for details on each endpoint and example usage.
+ 
